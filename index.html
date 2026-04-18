@@ -4,9 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TAJIMANIA — 3D FALLING BLOCK ARCADE</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <style>
   :root {
     --pink: #ff2d96;
@@ -15,13 +12,14 @@
     --green: #3fff88;
     --purple: #b44fff;
     --orange: #ff9a30;
+    --mono: ui-monospace, "SFMono-Regular", "Menlo", "Consolas", "Courier New", monospace;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
     min-height: 100vh;
     background: radial-gradient(ellipse at top, #1d0833 0%, #090218 55%, #000 100%);
     color: #fff;
-    font-family: 'VT323', 'Courier New', monospace;
+    font-family: var(--mono);
     overflow: hidden;
     user-select: none;
   }
@@ -31,15 +29,15 @@
     position: relative;
   }
 
-  /* CRT scanlines — BELOW game area (z-index 1), very subtle */
+  /* CRT — ABSOLUTE BOTTOM, cannot cover canvas */
   .crt-scan {
-    position: fixed; inset: 0; pointer-events: none; z-index: 1;
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
     background: repeating-linear-gradient(0deg,
       rgba(0,0,0,0.18) 0px, rgba(0,0,0,0.18) 1px,
       transparent 1px, transparent 3px);
   }
   .crt-vignette {
-    position: fixed; inset: 0; pointer-events: none; z-index: 1;
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
     background: radial-gradient(ellipse at center,
       transparent 55%, rgba(0,0,0,0.55) 100%);
   }
@@ -51,18 +49,18 @@
     gap: 18px;
     align-items: start;
     position: relative;
-    z-index: 5;
+    z-index: 10;
   }
 
+  /* Stage: NO perspective / NO transform at rest.
+     Perspective + transforms are added/removed dynamically only during gimmicks. */
   .stage-3d {
-    perspective: 1400px;
-    perspective-origin: 50% 50%;
     padding: 12px;
+    /* perspective is added at runtime when a gimmick is active */
   }
   #stage-inner {
     display: inline-block;
-    transform: rotateX(6deg);
-    will-change: transform;
+    /* no transform by default — this is the CRITICAL fix */
   }
 
   /* ===== PANELS ===== */
@@ -86,9 +84,10 @@
   }
   @keyframes slide { 0%{background-position:0 0;} 100%{background-position:200% 0;} }
   .panel h3 {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 9px;
-    letter-spacing: 2px;
+    font-family: var(--mono);
+    font-weight: 900;
+    font-size: 10px;
+    letter-spacing: 3px;
     color: var(--cyan);
     text-shadow: 0 0 6px var(--cyan);
     margin-bottom: 8px;
@@ -104,20 +103,20 @@
   }
   .stat {
     display: flex; justify-content: space-between; align-items: baseline;
-    padding: 3px 0; font-size: 18px;
+    padding: 3px 0; font-size: 14px;
+    font-family: var(--mono);
   }
   .stat .label {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 7px; color: #c090ff; letter-spacing: 1px;
+    font-weight: 900;
+    font-size: 9px; color: #c090ff; letter-spacing: 1.5px;
   }
   .stat .value {
     color: var(--yellow); text-shadow: 0 0 6px var(--yellow);
-    font-weight: 700; font-size: 22px; line-height: 1;
-    font-family: 'VT323', monospace;
+    font-weight: 900; font-size: 20px; line-height: 1;
   }
   .stat .value.big {
     color: var(--cyan); text-shadow: 0 0 10px var(--cyan);
-    font-size: 28px;
+    font-size: 24px;
   }
 
   /* ===== GAME CANVAS ===== */
@@ -145,13 +144,14 @@
     position: absolute; inset: -3px;
     display: none; flex-direction: column;
     align-items: center; justify-content: center;
-    background: rgba(2, 1, 8, 0.93);
+    background: rgba(2, 1, 8, 0.94);
     z-index: 20; padding: 20px; text-align: center;
   }
   .overlay.show { display: flex; }
   .mega-logo {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 30px; letter-spacing: 10px;
+    font-family: var(--mono);
+    font-weight: 900;
+    font-size: 34px; letter-spacing: 10px;
     color: #fff; margin-bottom: 4px;
     text-shadow: 3px 0 var(--cyan), -3px 0 var(--pink),
                  0 0 20px var(--pink), 0 0 40px var(--purple);
@@ -169,13 +169,15 @@
     100% { text-shadow: 3px 0 var(--cyan), -3px 0 var(--pink), 0 0 40px var(--yellow), 0 0 60px var(--pink); }
   }
   .mega-sub {
-    font-family: 'VT323', monospace;
-    font-size: 18px; color: var(--cyan); letter-spacing: 4px;
+    font-family: var(--mono);
+    font-weight: 900;
+    font-size: 15px; color: var(--cyan); letter-spacing: 5px;
     margin-bottom: 20px; text-shadow: 0 0 8px var(--cyan);
   }
   .hi-score {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 10px; color: var(--yellow); letter-spacing: 3px;
+    font-family: var(--mono);
+    font-weight: 900;
+    font-size: 12px; color: var(--yellow); letter-spacing: 3px;
     text-shadow: 0 0 8px var(--yellow);
   }
   .diff-grid {
@@ -183,12 +185,13 @@
     gap: 10px; width: 280px; margin: 14px 0 4px;
   }
   .diff {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 11px; padding: 12px 8px;
+    font-family: var(--mono);
+    font-weight: 900;
+    font-size: 13px; padding: 12px 8px;
     background: rgba(255,45,150,0.08);
     border: 2px solid var(--pink);
     color: #fff; cursor: pointer;
-    letter-spacing: 2px; transition: all 0.12s;
+    letter-spacing: 3px; transition: all 0.12s;
     text-shadow: 0 0 4px currentColor;
   }
   .diff:hover, .diff:focus {
@@ -210,28 +213,30 @@
     50% { border-color: #fff; color: #fff; }
   }
   .diff-note {
-    font-family: 'VT323', monospace;
+    font-family: var(--mono);
     font-size: 13px; color: #9080b0;
     margin-top: 6px; letter-spacing: 1px; min-height: 18px;
   }
   .coin-slot {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 10px; color: var(--yellow);
-    letter-spacing: 3px; margin-top: 14px;
+    font-family: var(--mono);
+    font-weight: 900;
+    font-size: 12px; color: var(--yellow);
+    letter-spacing: 4px; margin-top: 14px;
     animation: blink 0.9s steps(2) infinite;
   }
   @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
   .copy {
-    font-family: 'VT323', monospace; font-size: 14px;
+    font-family: var(--mono); font-size: 12px;
     color: #706090; margin-top: 12px; letter-spacing: 2px;
   }
 
-  /* ===== OVERLAY EFFECTS (inside game-wrap) ===== */
+  /* ===== IN-GAME EFFECTS ===== */
   .flash {
     position: absolute; left: 50%; top: 22%;
     transform: translate(-50%, 0);
-    font-family: 'Press Start 2P', monospace;
-    font-size: 22px; letter-spacing: 5px;
+    font-family: var(--mono);
+    font-weight: 900;
+    font-size: 24px; letter-spacing: 5px;
     pointer-events: none; opacity: 0; white-space: nowrap;
     z-index: 6;
     text-shadow: 0 0 14px currentColor, 2px 2px 0 rgba(0,0,0,0.9);
@@ -247,8 +252,9 @@
   .banner {
     position: absolute; left: 50%; top: 45%;
     transform: translate(-50%, -50%);
-    font-family: 'Press Start 2P', monospace;
-    font-size: 26px; letter-spacing: 5px;
+    font-family: var(--mono);
+    font-weight: 900;
+    font-size: 28px; letter-spacing: 5px;
     color: var(--yellow); text-align: center;
     pointer-events: none; opacity: 0; z-index: 7;
     text-shadow: 0 0 10px currentColor,
@@ -277,8 +283,9 @@
 
   .gimmick-tag {
     position: absolute; top: 8px; left: 10px;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 8px; color: var(--yellow);
+    font-family: var(--mono);
+    font-weight: 900;
+    font-size: 10px; color: var(--yellow);
     letter-spacing: 2px; padding: 4px 6px;
     background: rgba(0,0,0,0.7);
     border: 1px solid var(--yellow);
@@ -298,8 +305,9 @@
   .combo-meter {
     position: absolute; bottom: 10px; right: 10px;
     display: none; z-index: 9;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 11px; color: var(--green);
+    font-family: var(--mono);
+    font-weight: 900;
+    font-size: 13px; color: var(--green);
     letter-spacing: 2px; padding: 5px 9px;
     background: rgba(0,0,0,0.7);
     border: 1px solid var(--green);
@@ -312,13 +320,24 @@
   }
 
   /* ===== CONTROLS ===== */
-  .controls { font-family: 'VT323', monospace; font-size: 15px; color: #b0a0d0; }
-  .controls .row { display: flex; justify-content: space-between; padding: 1px 0; }
+  .controls { font-family: var(--mono); font-size: 12px; color: #b0a0d0; }
+  .controls .row { display: flex; justify-content: space-between; padding: 2px 0; }
   .controls .key {
-    font-family: 'Press Start 2P', monospace; font-size: 7px;
+    font-family: var(--mono);
+    font-weight: 900;
+    font-size: 9px;
     background: rgba(180,79,255,0.18);
     border: 1px solid var(--purple);
     padding: 2px 5px; color: #fff; letter-spacing: 1px;
+  }
+
+  #errorBox {
+    display:none;
+    position: fixed; bottom: 10px; left: 10px;
+    background: #300; border: 1px solid #f44;
+    color: #fcc; padding: 8px; font-size: 11px;
+    font-family: var(--mono); z-index: 99999;
+    max-width: 90vw; white-space: pre-wrap;
   }
 
   @media (max-width: 760px) {
@@ -330,6 +349,7 @@
 <body>
 
 <div class="crt-scan"></div>
+<div class="crt-vignette"></div>
 
 <div class="wrap">
   <div class="side left">
@@ -348,11 +368,11 @@
     </div>
     <div class="panel">
       <h3>MODE</h3>
-      <div class="stat"><span class="label">DIFF</span><span class="value" id="mode" style="font-size:18px;">-</span></div>
+      <div class="stat"><span class="label">DIFF</span><span class="value" id="mode" style="font-size:16px;">-</span></div>
     </div>
   </div>
 
-  <div class="stage-3d">
+  <div class="stage-3d" id="stage3d">
     <div id="stage-inner">
       <div id="game-wrap">
         <canvas id="game" width="300" height="600"></canvas>
@@ -401,10 +421,20 @@
   </div>
 </div>
 
-<div class="crt-vignette"></div>
+<div id="errorBox"></div>
 
 <script>
+// Global error catcher — if something throws, show it instead of failing silently
+window.addEventListener('error', (e) => {
+  const box = document.getElementById('errorBox');
+  if (!box) return;
+  box.style.display = 'block';
+  box.textContent = 'ERR: ' + (e.message || e.error || 'unknown') + '\n' + (e.filename ? e.filename+':'+e.lineno : '');
+});
+
 (() => {
+  "use strict";
+
   // =========================================================
   //  CONSTANTS
   // =========================================================
@@ -489,6 +519,7 @@
   const canvas = $('game'), ctx = canvas.getContext('2d');
   const holdCanvas = $('hold'), holdCtx = holdCanvas.getContext('2d');
   const nextCanvas = $('next'), nextCtx = nextCanvas.getContext('2d');
+  const stage3d = $('stage3d');
   const stageInner = $('stage-inner');
   const overlay = $('overlay');
   const flashEl = $('flash');
@@ -511,42 +542,47 @@
   function sfx(freq, dur, type='square', gain=0.06) {
     if (muted) return;
     const ac = ensureAudio(); if (!ac) return;
-    const osc = ac.createOscillator(), g = ac.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, ac.currentTime);
-    g.gain.setValueAtTime(gain, ac.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + dur);
-    osc.connect(g); g.connect(ac.destination);
-    osc.start(); osc.stop(ac.currentTime + dur);
+    try {
+      const osc = ac.createOscillator(), g = ac.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, ac.currentTime);
+      g.gain.setValueAtTime(gain, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + dur);
+      osc.connect(g); g.connect(ac.destination);
+      osc.start(); osc.stop(ac.currentTime + dur);
+    } catch(e) {}
   }
   function sweep(f1, f2, dur, type='square', gain=0.07) {
     if (muted) return;
     const ac = ensureAudio(); if (!ac) return;
-    const osc = ac.createOscillator(), g = ac.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(f1, ac.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(Math.max(f2, 30), ac.currentTime + dur);
-    g.gain.setValueAtTime(gain, ac.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + dur);
-    osc.connect(g); g.connect(ac.destination);
-    osc.start(); osc.stop(ac.currentTime + dur);
+    try {
+      const osc = ac.createOscillator(), g = ac.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(f1, ac.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(f2, 30), ac.currentTime + dur);
+      g.gain.setValueAtTime(gain, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + dur);
+      osc.connect(g); g.connect(ac.destination);
+      osc.start(); osc.stop(ac.currentTime + dur);
+    } catch(e) {}
   }
   function noise(dur, gain=0.04) {
     if (muted) return;
     const ac = ensureAudio(); if (!ac) return;
-    const buf = ac.createBuffer(1, Math.floor(ac.sampleRate * dur), ac.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i=0;i<d.length;i++) d[i] = (Math.random()*2-1) * (1 - i/d.length);
-    const src = ac.createBufferSource(); src.buffer = buf;
-    const g = ac.createGain(); g.gain.value = gain;
-    src.connect(g); g.connect(ac.destination);
-    src.start();
+    try {
+      const buf = ac.createBuffer(1, Math.floor(ac.sampleRate * dur), ac.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i=0;i<d.length;i++) d[i] = (Math.random()*2-1) * (1 - i/d.length);
+      const src = ac.createBufferSource(); src.buffer = buf;
+      const g = ac.createGain(); g.gain.value = gain;
+      src.connect(g); g.connect(ac.destination);
+      src.start();
+    } catch(e) {}
   }
   function chord(freqs, dur, type='square', gain=0.05) {
     for (const f of freqs) sfx(f, dur, type, gain);
   }
 
-  // Chiptune BGM
   let bgmTimer = null, bgmIdx = 0, bgmBassIdx = 0;
   const MELODY = [
     [523,.12],[659,.12],[784,.12],[1047,.12],[784,.12],[659,.12],[523,.12],[0,.12],
@@ -555,34 +591,35 @@
     [392,.12],[494,.12],[659,.12],[784,.12],[659,.12],[494,.12],[392,.12],[0,.12],
   ];
   const BASS = [[131,.45],[131,.45],[117,.45],[117,.45],[110,.45],[110,.45],[98,.45],[98,.45]];
-
   function bgmStep() {
     if (!started || paused || gameOver || muted) {
       bgmTimer = setTimeout(bgmStep, 150); return;
     }
     const ac = ensureAudio(); if (!ac) { bgmTimer = setTimeout(bgmStep, 150); return; }
-    const [f, d] = MELODY[bgmIdx % MELODY.length];
-    if (f > 0) {
-      const osc = ac.createOscillator(), g = ac.createGain();
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(f * (danger ? 1.05 : 1), ac.currentTime);
-      g.gain.setValueAtTime(0.03, ac.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + d * 0.9);
-      osc.connect(g); g.connect(ac.destination);
-      osc.start(); osc.stop(ac.currentTime + d);
-    }
-    bgmIdx++;
-    if (bgmIdx % 4 === 0) {
-      const [bf, bd] = BASS[bgmBassIdx % BASS.length];
-      const osc = ac.createOscillator(), g = ac.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(bf, ac.currentTime);
-      g.gain.setValueAtTime(0.055, ac.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + bd);
-      osc.connect(g); g.connect(ac.destination);
-      osc.start(); osc.stop(ac.currentTime + bd);
-      bgmBassIdx++;
-    }
+    try {
+      const [f, d] = MELODY[bgmIdx % MELODY.length];
+      if (f > 0) {
+        const osc = ac.createOscillator(), g = ac.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(f * (danger ? 1.05 : 1), ac.currentTime);
+        g.gain.setValueAtTime(0.03, ac.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + d * 0.9);
+        osc.connect(g); g.connect(ac.destination);
+        osc.start(); osc.stop(ac.currentTime + d);
+      }
+      bgmIdx++;
+      if (bgmIdx % 4 === 0) {
+        const [bf, bd] = BASS[bgmBassIdx % BASS.length];
+        const osc = ac.createOscillator(), g = ac.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(bf, ac.currentTime);
+        g.gain.setValueAtTime(0.055, ac.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + bd);
+        osc.connect(g); g.connect(ac.destination);
+        osc.start(); osc.stop(ac.currentTime + bd);
+        bgmBassIdx++;
+      }
+    } catch(e) {}
     const interval = 115 / (1 + (level-1)*0.035) * (danger ? 0.82 : 1);
     bgmTimer = setTimeout(bgmStep, interval);
   }
@@ -596,32 +633,29 @@
   let gameOver, paused, started;
   let lastTime;
   let particles = [];
-  let popups = [];        // floating score text
+  let popups = [];
   let shockwaves = [];
   let flashRows = [];
   let flashStart = 0;
   let shakeTime = 0, shakeMag = 0;
   let diff = 'NORMAL';
   let danger = false;
-  let lockFlash = 0;      // timer for lock-impact flash
-  let lineGlow = null;    // { rows, until } — pre-clear glow
-
-  // Piece spawn animation
+  let lockFlash = 0;
   let spawnAnim = 0;
 
-  // Gimmicks
+  // Transform state (only written to CSS when changing)
   let gimmickTimer = 0, gimmickNext = 99999;
   let activeGimmicks = new Map();
-  let rotX = 6, rotY = 0, rotZ = 0, zoom = 1;
-  let targetRotX = 6, targetRotY = 0, targetRotZ = 0, targetZoom = 1;
+  let rotX = 0, rotY = 0, rotZ = 0, zoom = 1;
+  let targetRotX = 0, targetRotY = 0, targetRotZ = 0, targetZoom = 1;
   let mirrorInput = false;
+  let transformActive = false;   // track whether any transform is applied
 
-  // Input
   const keys = {};
   let dasDir = 0, dasTimer = 0, arrTimer = 0;
 
   try {
-    const saved = localStorage.getItem('tajimania_hi');
+    const saved = (typeof localStorage !== 'undefined') ? localStorage.getItem('tajimania_hi') : null;
     hi = saved ? parseInt(saved, 10) : 0;
   } catch(e) { hi = 0; }
 
@@ -667,7 +701,7 @@
     for (let y=0;y<p.shape.length;y++) for (let x=0;x<p.shape[y].length;x++) {
       if (p.shape[y][x]) {
         const by = p.y + y, bx = p.x + x;
-        if (by >= 0) board[by][bx] = { color: p.color, age: 0 };
+        if (by >= 0) board[by][bx] = { color: p.color };
       }
     }
   }
@@ -689,10 +723,10 @@
     return false;
   }
   function tryMove(dx, dy) {
-    if (mirrorInput && dx !== 0) dx = -dx;
-    if (!collide(current, dx, dy)) {
-      current.x += dx; current.y += dy;
-      if (dx !== 0) { sfx(180, 0.02, 'square', 0.03); lockTimer = 0; }
+    const actualDx = mirrorInput && dx !== 0 ? -dx : dx;
+    if (!collide(current, actualDx, dy)) {
+      current.x += actualDx; current.y += dy;
+      if (actualDx !== 0) { sfx(180, 0.02, 'square', 0.03); lockTimer = 0; }
       return true;
     }
     return false;
@@ -711,14 +745,14 @@
     noise(0.08, 0.04);
     addShake(6, 180);
     lockFlash = 150;
-    addPopup(`+${dropped*2}`, 'rgba(255,255,255,0.7)', 10);
+    if (dropped > 0) addPopup(`+${dropped*2}`, 'rgba(255,255,255,0.8)', 11);
     lockPiece();
   }
   function addShake(mag, ms) {
     shakeMag = Math.max(shakeMag, mag);
     shakeTime = Math.max(shakeTime, ms);
   }
-  function addPopup(text, color, size=16) {
+  function addPopup(text, color, size=14) {
     popups.push({
       text, color, size,
       x: canvas.width/2 + (Math.random()-0.5)*40,
@@ -733,9 +767,16 @@
     screenFlash.classList.add('fire');
   }
 
-  function isPerfectClear() {
+  function checkWillBePerfect(clearedRows) {
+    const simBoard = board.map(r => r.slice());
+    // Remove rows from bottom to top to preserve indices
+    const sorted = clearedRows.slice().sort((a, b) => b - a);
+    for (const row of sorted) {
+      simBoard.splice(row, 1);
+      simBoard.unshift(new Array(COLS).fill(null));
+    }
     for (let y = HIDDEN; y < ROWS + HIDDEN; y++) {
-      for (let x = 0; x < COLS; x++) if (board[y][x]) return false;
+      for (let x = 0; x < COLS; x++) if (simBoard[y][x]) return false;
     }
     return true;
   }
@@ -743,14 +784,12 @@
   function lockPiece() {
     merge(current);
 
-    // Top out check
     let topOut = false;
     for (let x=0;x<COLS;x++) {
       for (let y=0;y<HIDDEN;y++) if (board[y][x]) { topOut = true; break; }
       if (topOut) break;
     }
 
-    // Find cleared lines
     const cleared = [];
     for (let y = 0; y < ROWS + HIDDEN; y++) {
       if (board[y].every(c => c !== null)) cleared.push(y);
@@ -760,7 +799,6 @@
       flashRows = cleared.slice();
       flashStart = performance.now();
 
-      // Score calc
       const base = [0,100,300,500,800][cleared.length] * level;
       let bonus = 0;
       let b2bFlag = false;
@@ -771,18 +809,14 @@
       const comboBonus = combo * 50 * level;
       const totalGain = base + bonus + comboBonus;
 
-      // Perfect clear detection (check after removal)
-      const willBePC = cleared.length > 0 && checkWillBePerfect(cleared);
+      const willBePC = checkWillBePerfect(cleared);
       let pcBonus = 0;
-      if (willBePC) {
-        pcBonus = [0, 800, 1200, 1800, 3200][cleared.length] * level;
-      }
+      if (willBePC) pcBonus = [0, 800, 1200, 1800, 3200][cleared.length] * level;
 
       score += totalGain + pcBonus;
       lines += cleared.length;
       combo++;
 
-      // Level up
       const newLevel = Math.min(20, DIFFS[diff].startLevel + Math.floor(lines / 10));
       if (newLevel !== level) {
         level = newLevel;
@@ -791,7 +825,6 @@
         for (let i=0;i<30;i++) burstParticle(canvas.width/2, canvas.height/2, randomColor());
       }
 
-      // Effects
       const msgs = { 1:'SINGLE', 2:'DOUBLE', 3:'TRIPLE', 4:'TAJIMA!' };
       const colors = { 1:'#fff04f', 2:'#3fff88', 3:'#ff2d96', 4:'#00f0ff' };
       let flashText = msgs[cleared.length];
@@ -800,7 +833,6 @@
       showFlash(flashText, colors[cleared.length]);
       addPopup(`+${totalGain}`, colors[cleared.length], 14 + cleared.length*2);
 
-      // Line particles (MANY)
       for (const row of cleared) {
         for (let x = 0; x < COLS; x++) {
           const c = board[row][x];
@@ -827,7 +859,6 @@
         chord([523, 659, 784], 0.3, 'square', 0.05);
         addShake(14, 380);
         flashScreen();
-        // Big scatter
         for (let i=0;i<60;i++) burstParticle(canvas.width/2, canvas.height*0.4, randomColor());
       } else if (cleared.length === 3) {
         sweep(300, 900, 0.3, 'square', 0.08);
@@ -839,7 +870,6 @@
         sfx(600, 0.1, 'square', 0.06);
       }
 
-      // Perfect clear
       if (willBePC) {
         setTimeout(() => {
           showBanner('PERFECT CLEAR!', '#fff04f');
@@ -851,7 +881,6 @@
         }, 300);
       }
 
-      // Combo display
       if (combo > 1) {
         comboEl.textContent = `COMBO ×${combo}`;
         comboEl.classList.remove('show');
@@ -859,9 +888,9 @@
         comboEl.classList.add('show');
       }
 
-      // Delayed actual removal (for animation)
       setTimeout(() => {
-        for (const row of cleared) {
+        const sorted = cleared.slice().sort((a, b) => b - a);
+        for (const row of sorted) {
           board.splice(row, 1);
           board.unshift(new Array(COLS).fill(null));
         }
@@ -876,26 +905,12 @@
 
     if (topOut) { endGame(); return; }
     canHold = true;
-    // Use queue correctly: current = next from queue, queue gets fresh from bag
     const nextType = nextQueue.shift();
     current = spawnPiece(nextType);
     nextQueue.push(pullBag());
     lockTimer = 0; locking = false;
     spawnAnim = 200;
     if (collide(current, 0, 0)) endGame();
-  }
-
-  function checkWillBePerfect(clearedRows) {
-    // Simulate clearing and check if board is empty
-    const simBoard = board.map(r => r.slice());
-    for (const row of clearedRows) {
-      simBoard.splice(row, 1);
-      simBoard.unshift(new Array(COLS).fill(null));
-    }
-    for (let y = HIDDEN; y < ROWS + HIDDEN; y++) {
-      for (let x = 0; x < COLS; x++) if (simBoard[y][x]) return false;
-    }
-    return true;
   }
 
   function burstParticle(x, y, color, speedMult=1) {
@@ -942,7 +957,7 @@
     noise(0.6, 0.05);
     if (score > hi) {
       hi = score;
-      try { localStorage.setItem('tajimania_hi', String(hi)); } catch(e) {}
+      try { if (typeof localStorage !== 'undefined') localStorage.setItem('tajimania_hi', String(hi)); } catch(e) {}
     }
     overlay.classList.add('show');
     overlay.innerHTML = `
@@ -964,23 +979,42 @@
   }
 
   function resetStageTransform() {
-    rotX = 6; targetRotX = 6;
+    rotX = 0; targetRotX = 0;
     rotY = 0; targetRotY = 0;
     rotZ = 0; targetRotZ = 0;
     zoom = 1; targetZoom = 1;
     mirrorInput = false;
     activeGimmicks.clear();
-    applyStageTransform();
+    applyStageTransform(true);
     updateGimmickTag();
   }
-  function applyStageTransform() {
+
+  function applyStageTransform(force) {
+    const isIdentity =
+      Math.abs(rotX) < 0.05 && Math.abs(rotY) < 0.05 &&
+      Math.abs(rotZ) < 0.05 && Math.abs(zoom - 1) < 0.005;
+
+    if (isIdentity && !activeGimmicks.size) {
+      if (transformActive || force) {
+        // Remove transforms entirely — make stage flat and identity
+        stage3d.style.perspective = '';
+        stageInner.style.transform = '';
+        transformActive = false;
+      }
+      return;
+    }
+
+    if (!transformActive) {
+      stage3d.style.perspective = '1400px';
+      transformActive = true;
+    }
     stageInner.style.transform =
       `rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg) ` +
       `rotateZ(${rotZ.toFixed(2)}deg) scale(${zoom.toFixed(3)})`;
   }
 
   // =========================================================
-  //  GIMMICK SYSTEM
+  //  GIMMICKS
   // =========================================================
   const GIMMICKS = ['TILT', 'SPIN', 'WARP', 'YAW', 'PLUNGE', 'MIRROR', 'QUAKE'];
 
@@ -999,7 +1033,7 @@
 
     switch(name) {
       case 'TILT':
-        targetRotX = 6 + (Math.random()>0.5?1:-1) * 20 * intensity;
+        targetRotX = (Math.random()>0.5?1:-1) * 20 * intensity;
         targetRotY = (Math.random()>0.5?1:-1) * 16 * intensity;
         activeGimmicks.set('TILT', { timeLeft: duration });
         break;
@@ -1016,7 +1050,7 @@
         activeGimmicks.set('YAW', { timeLeft: duration, phase: 0 });
         break;
       case 'PLUNGE':
-        targetZoom = 0.7; targetRotX = 32;
+        targetZoom = 0.72; targetRotX = 32;
         activeGimmicks.set('PLUNGE', { timeLeft: duration });
         break;
       case 'MIRROR':
@@ -1040,10 +1074,9 @@
 
   function endGimmick(name) {
     activeGimmicks.delete(name);
-    if (name === 'TILT' || name === 'PLUNGE') {
-      targetRotX = 6; targetRotY = 0; targetZoom = 1;
+    if (name === 'TILT' || name === 'PLUNGE' || name === 'WARP' || name === 'YAW') {
+      targetRotX = 0; targetRotY = 0; targetZoom = 1;
     }
-    if (name === 'WARP' || name === 'YAW') { targetRotX = 6; targetRotY = 0; targetZoom = 1; }
     if (name === 'SPIN' || name === 'MIRROR') targetRotZ = 0;
     if (name === 'MIRROR') mirrorInput = false;
     updateGimmickTag();
@@ -1069,7 +1102,7 @@
           break;
         case 'WARP':
           data.phase += dt * 0.0035;
-          targetRotX = 6 + Math.sin(data.phase) * 18;
+          targetRotX = Math.sin(data.phase) * 18;
           targetRotY = Math.cos(data.phase * 0.75) * 22;
           targetZoom = 1 + Math.sin(data.phase * 1.3) * 0.08;
           break;
@@ -1086,7 +1119,7 @@
     rotY += (targetRotY - rotY) * 0.08;
     rotZ += (targetRotZ - rotZ) * 0.08;
     zoom += (targetZoom - zoom) * 0.08;
-    applyStageTransform();
+    applyStageTransform(false);
   }
 
   // =========================================================
@@ -1129,7 +1162,7 @@
   }
 
   // =========================================================
-  //  RENDERING
+  //  RENDERING — GUARANTEED VISIBLE
   // =========================================================
   function shade(hex, amt) {
     const h = hex.replace('#','');
@@ -1142,55 +1175,56 @@
     return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
   }
 
-  // Draw a solid, HIGH-CONTRAST block with fake 3D extrusion
-  function drawBlock(c, gx, gy, color, opts={}) {
-    const px = gx * BLOCK, py = gy * BLOCK;
-    const flash = opts.flash || 0;          // 0..1
-    const glow  = opts.glow  || 0;          // 0..1
+  // Bulletproof block: solid fill + bright highlights + THICK black outline.
+  function drawBlock(c, gx, gy, color, opts) {
+    opts = opts || {};
+    const flash = opts.flash || 0;
+    const glow  = opts.glow  || 0;
     const scale = opts.scale || 1;
     const s = BLOCK * scale;
-    const cx = px + BLOCK/2, cy = py + BLOCK/2;
-    const x0 = cx - s/2, y0 = cy - s/2;
+    const cx = gx * BLOCK + BLOCK/2;
+    const cy = gy * BLOCK + BLOCK/2;
+    const x0 = Math.round(cx - s/2);
+    const y0 = Math.round(cy - s/2);
+    const sz = Math.round(s);
 
     c.save();
 
-    // Outer glow
     if (glow > 0) {
       c.shadowColor = color;
-      c.shadowBlur = 16 * glow;
+      c.shadowBlur = 14 * glow;
     }
 
-    // Main body
+    // Solid body — no gradient, maximum visibility
     c.fillStyle = color;
-    c.fillRect(x0 + 1, y0 + 1, s - 2, s - 2);
+    c.fillRect(x0, y0, sz, sz);
 
     c.shadowBlur = 0;
 
-    // Top bevel (lighter)
-    c.fillStyle = shade(color, 70);
-    c.fillRect(x0 + 1, y0 + 1, s - 2, Math.max(3, s * 0.13));
-    // Left bevel
-    c.fillRect(x0 + 1, y0 + 1, Math.max(3, s * 0.13), s - 2);
-    // Bottom bevel (darker)
+    // Top highlight
+    c.fillStyle = shade(color, 80);
+    c.fillRect(x0, y0, sz, Math.max(3, sz * 0.16));
+    // Left highlight
+    c.fillRect(x0, y0, Math.max(3, sz * 0.16), sz);
+    // Bottom shadow
     c.fillStyle = shade(color, -80);
-    c.fillRect(x0 + 1, y0 + s - Math.max(3, s * 0.13) - 1, s - 2, Math.max(3, s * 0.13));
-    // Right bevel
-    c.fillRect(x0 + s - Math.max(3, s * 0.13) - 1, y0 + 1, Math.max(3, s * 0.13), s - 2);
+    c.fillRect(x0, y0 + sz - Math.max(3, sz * 0.16), sz, Math.max(3, sz * 0.16));
+    // Right shadow
+    c.fillRect(x0 + sz - Math.max(3, sz * 0.16), y0, Math.max(3, sz * 0.16), sz);
 
-    // Inner highlight rectangle (subtle)
-    c.strokeStyle = shade(color, 40);
+    // Inner rectangle (subtle detail)
+    c.strokeStyle = shade(color, 60);
     c.lineWidth = 1;
-    c.strokeRect(x0 + 5, y0 + 5, s - 10, s - 10);
+    c.strokeRect(x0 + 5, y0 + 5, sz - 10, sz - 10);
 
-    // Hard outline (so it's always visible, even through CRT effects)
+    // THICK black outline — guarantees visibility in any environment
     c.strokeStyle = '#000';
-    c.lineWidth = 1;
-    c.strokeRect(x0 + 0.5, y0 + 0.5, s - 1, s - 1);
+    c.lineWidth = 2;
+    c.strokeRect(x0 + 1, y0 + 1, sz - 2, sz - 2);
 
-    // Flash overlay
     if (flash > 0) {
-      c.fillStyle = `rgba(255,255,255,${flash})`;
-      c.fillRect(x0 + 1, y0 + 1, s - 2, s - 2);
+      c.fillStyle = `rgba(255,255,255,${Math.min(1, flash)})`;
+      c.fillRect(x0, y0, sz, sz);
     }
 
     c.restore();
@@ -1214,14 +1248,14 @@
       oy = (Math.random() - 0.5) * shakeMag;
     }
 
-    // Clear
+    // ===== Clear (solid base) =====
     ctx.fillStyle = '#020108';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
     ctx.translate(ox, oy);
 
-    // Background — subtle gradient that shifts with level
+    // ===== BG gradient (shifts with level) =====
     const hue = (level * 20) % 360;
     const bgGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
     bgGrad.addColorStop(0, `hsla(${hue}, 55%, 9%, 1)`);
@@ -1229,7 +1263,7 @@
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Grid
+    // ===== Grid =====
     ctx.strokeStyle = danger ? 'rgba(255,60,60,0.22)' : 'rgba(180,79,255,0.12)';
     ctx.lineWidth = 1;
     for (let i = 0; i <= COLS; i++) {
@@ -1245,7 +1279,7 @@
       ctx.stroke();
     }
 
-    // Scrolling horizon lines (subtle arcade bg)
+    // ===== Scrolling horizon =====
     const t = performance.now() * 0.0003;
     ctx.strokeStyle = 'rgba(0,240,255,0.07)';
     for (let i = 0; i < 4; i++) {
@@ -1255,15 +1289,15 @@
       ctx.stroke();
     }
 
-    // Board blocks
+    // ===== Board blocks =====
     const now = performance.now();
     const flashPhase = flashRows.length ? Math.min(1, (now - flashStart) / 280) : 0;
     for (let y = HIDDEN; y < ROWS + HIDDEN; y++) {
       for (let x = 0; x < COLS; x++) {
-        const cell = board[y][x];
+        const cell = board[y] && board[y][x];
         if (cell) {
           const visY = y - HIDDEN;
-          const isFlash = flashRows.includes(y);
+          const isFlash = flashRows.indexOf(y) !== -1;
           if (isFlash) {
             const scale = 1 - flashPhase * 0.6;
             drawBlock(ctx, x, visY, cell.color, {
@@ -1272,13 +1306,13 @@
               scale: Math.max(0.1, scale)
             });
           } else {
-            drawBlock(ctx, x, visY, cell.color, { glow: 0.2 });
+            drawBlock(ctx, x, visY, cell.color, { glow: 0.25 });
           }
         }
       }
     }
 
-    // Ghost and current piece
+    // ===== Ghost + current piece =====
     if (current && started && !gameOver) {
       const gy = ghostY();
       for (let y = 0; y < current.shape.length; y++) {
@@ -1289,9 +1323,8 @@
           }
         }
       }
-      // Spawn animation (brief scale/glow)
       const spawnScale = spawnAnim > 0 ? 1 + Math.sin((spawnAnim / 200) * Math.PI) * 0.08 : 1;
-      const spawnGlow = spawnAnim > 0 ? 0.6 : (locking ? 0.7 : 0.4);
+      const spawnGlow = spawnAnim > 0 ? 0.7 : (locking ? 0.8 : 0.5);
       const lockPulse = lockFlash > 0 ? lockFlash / 150 : 0;
 
       for (let y = 0; y < current.shape.length; y++) {
@@ -1308,7 +1341,7 @@
       }
     }
 
-    // Particles (rainbow-capable)
+    // ===== Particles =====
     for (const p of particles) {
       ctx.save();
       ctx.globalAlpha = Math.max(0, p.life);
@@ -1324,7 +1357,7 @@
       ctx.restore();
     }
 
-    // Shockwaves
+    // ===== Shockwaves =====
     for (const sw of shockwaves) {
       ctx.save();
       ctx.globalAlpha = Math.max(0, 1 - sw.t);
@@ -1340,18 +1373,18 @@
       ctx.restore();
     }
 
-    // Danger heartbeat
+    // ===== Danger heartbeat =====
     if (danger && started && !gameOver) {
       const p = (Math.sin(now * 0.009) + 1) * 0.5;
       ctx.fillStyle = `rgba(255,40,60,${0.06 + p * 0.10})`;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    // Score popups
+    // ===== Score popups =====
     for (const pop of popups) {
       ctx.save();
       ctx.globalAlpha = Math.max(0, pop.life);
-      ctx.font = `bold ${pop.size}px "Press Start 2P", monospace`;
+      ctx.font = `900 ${pop.size}px ui-monospace, "Consolas", monospace`;
       ctx.textAlign = 'center';
       ctx.shadowColor = pop.color;
       ctx.shadowBlur = 8;
@@ -1363,7 +1396,7 @@
       ctx.restore();
     }
 
-    // Canvas scanlines (very subtle, drawn here so they're tied to canvas)
+    // ===== Canvas-local scanlines (very subtle) =====
     ctx.save();
     ctx.fillStyle = 'rgba(0,0,0,0.06)';
     for (let i = 0; i < canvas.height; i += 4) {
@@ -1373,7 +1406,6 @@
 
     ctx.restore();
 
-    // Mini canvases
     renderMini(holdCtx, holdCanvas, holdPiece ? [holdPiece] : [], !canHold);
     renderMini(nextCtx, nextCanvas, nextQueue.slice(0, 5), false);
   }
@@ -1408,16 +1440,16 @@
       if (shape[y][x]) {
         const px = sx + x*sz, py = sy + y*sz;
         c.fillStyle = def.color;
-        c.fillRect(px+1, py+1, sz-2, sz-2);
+        c.fillRect(px, py, sz, sz);
         c.fillStyle = shade(def.color, 60);
-        c.fillRect(px+1, py+1, sz-2, 3);
-        c.fillRect(px+1, py+1, 3, sz-2);
+        c.fillRect(px, py, sz, 3);
+        c.fillRect(px, py, 3, sz);
         c.fillStyle = shade(def.color, -60);
-        c.fillRect(px+1, py+sz-4, sz-2, 3);
-        c.fillRect(px+sz-4, py+1, 3, sz-2);
+        c.fillRect(px, py + sz - 3, sz, 3);
+        c.fillRect(px + sz - 3, py, 3, sz);
         c.strokeStyle = '#000';
-        c.lineWidth = 1;
-        c.strokeRect(px+0.5, py+0.5, sz-1, sz-1);
+        c.lineWidth = 1.5;
+        c.strokeRect(px + 0.75, py + 0.75, sz - 1.5, sz - 1.5);
       }
     }
     c.restore();
@@ -1432,15 +1464,13 @@
     lastTime = now;
 
     if (started && !paused && !gameOver) {
-      // DAS/ARR
       if (dasDir !== 0) {
         dasTimer += dt;
         if (dasTimer >= DAS) {
           arrTimer += dt;
           while (arrTimer >= ARR) {
             arrTimer -= ARR;
-            const d = mirrorInput ? -dasDir : dasDir;
-            if (!tryMove(d === dasDir ? dasDir : -dasDir, 0)) break;
+            if (!tryMove(dasDir, 0)) break;
           }
         }
       }
@@ -1467,7 +1497,6 @@
       }
       updateGimmicks(dt);
 
-      // Particles
       for (const p of particles) {
         p.x += p.vx; p.y += p.vy;
         p.vy += 0.35;
@@ -1476,7 +1505,6 @@
       }
       particles = particles.filter(p => p.life > 0);
 
-      // Popups
       for (const pop of popups) {
         pop.y += pop.vy;
         pop.vy *= 0.98;
@@ -1484,7 +1512,6 @@
       }
       popups = popups.filter(p => p.life > 0);
 
-      // Shockwaves
       for (const sw of shockwaves) sw.t += dt * 0.003;
       shockwaves = shockwaves.filter(s => s.t < 1.2);
 
@@ -1493,9 +1520,6 @@
       if (lockFlash > 0) lockFlash = Math.max(0, lockFlash - dt);
 
       updateUI();
-    } else if (!started) {
-      // Gentle idle animation on title
-      applyStageTransform();
     }
 
     render();
